@@ -1,0 +1,215 @@
+1. Compiling a Cross-Toolchain:
+
+        Binutils - Pass 1
+        GCC - Pass 1
+        Linux API Headers
+        Glibc
+        Libstdc++ from GCC
+
+2. Cross Compiling Temporary Tools:
+
+        M4
+        Ncurses
+        Bash
+        Coreutils
+        Diffutils
+        File
+        Findutils
+        Gawk
+        Grep
+        Gzip
+        Make
+        Patch
+        Sed
+        Tar
+        Xz
+        Binutils - Pass 2
+        GCC - Pass 2
+
+3. Entering Chroot and Building Additional Temporary Tools:
+
+        Entering the Chroot Environment
+        Creating Directories
+        Creating Essential Files and Symlinks
+
+        Gettext
+        Bison
+        Perl
+        Python
+        Texinfo
+        Util-linux
+
+        Cleaning up and Saving the Temporary System
+
+4. Installing Basic System Software:
+
+        Man-pages
+        Iana-Etc
+        Glibc
+        Zlib
+        Bzip2
+        Xz
+        Zstd
+        File
+        Readline
+        M4
+        Bc
+        Flex
+        Tcl
+        Expect
+        DejaGNU
+        Binutils
+        GMP
+        MPFR
+        MPC
+        Attr
+        Acl
+        Libcap
+        Shadow
+        GCC
+        Pkgconf
+        Ncurses
+        Sed
+        Psmisc
+        Gettext
+        Bison
+        Grep
+        Bash
+        Libtool
+        GDBM
+        Gperf
+        Expat
+        Inetutils
+        Less
+        Perl
+        XML::Parser
+        Intltool
+        Autoconf
+        Automake
+        OpenSSL
+        Kmod
+        Libelf from Elfutils
+        Libffi
+        Python
+        Flit
+        Wheel
+        Ninja
+        Meson
+        Coreutils
+        Check
+        Diffutils
+        Gawk
+        Findutils
+        Groff
+        GRUB
+        Gzip
+        IPRoute2
+        Kbd
+        Libpipeline
+        Make
+        Patch
+        Tar
+        Texinfo
+        Vim
+        MarkupSafe
+        Jinja2
+        Systemd
+        D-Bus
+        Man-DB
+        Procps-ng
+        Util-linux
+        E2fsprogs
+
+--------------------------------------------------------------------------------
+                            W A R N I N G
+--------------------------------------------------------------------------------
+
+To be able to boot your new system you need to follow
+the next steps:
+
+- Mount the system partition if not mounted:
+
+root# mount /dev/<system_part> /mnt/<system_name>
+
+- Run genfstab for create fstab file:
+
+root# genfstab -U /mnt/<system_name> > /mnt/<system_name>/etc/fstab
+
+- Copy resolv.conf file
+
+root# cp --dereference /etc/resolv.conf /mnt/<system_name>/etc/
+
+- Mount the virtual kernel file systems:
+
+root# mount --bind /dev /mnt/<system_name>/dev
+root# mount --bind /dev/pts /mnt/<system_name>/dev/pts
+root# mount -t proc proc /mnt/<system_name>/proc
+root# mount -t sysfs sysfs /mnt/<system_name>/sys
+root# mount -t tmpfs tmpfs /mnt/<system_name>/run
+
+- Enter to the chroot using the command found
+in the section -Entering the Chroot Environment-
+except if building with METHOD=boot. :
+
+chroot /mnt/<system_name> /usr/bin/env -i   \
+    HOME=/root                         \
+    TERM="$TERM"                       \
+    PS1='(<system_name> chroot) \u:\w\$ '        \
+    PATH=/usr/bin:/usr/sbin            \
+    /bin/bash --login
+
+- Set a password for the root user:
+
+(<system> chroot) root:/# passwd
+
+- Edit or create /etc/fstab and any other configuration file
+required to suit your needs.
+
+- Set-up the boot loader:
+
+(lfs chroot) root:/# mkdir -p /boot/efi
+(lfs chroot) root:/# mount /dev/<efi_part> /boot/efi
+(lfs chroot) root:/# grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id="<system_name>"
+(lfs chroot) root:/# grub-mkconfig -o /boot/grub/grub.cfg
+
+You can set-up the new boot-loader installed on the new system
+or the host bootloader.
+
+If the last, it is better to exit first from the chroot.
+
+- Exit from the chroot and umount the filesystems.
+
+If you are an experienced LFS user, several of those steps can be
+skipped or done in a different way. But then, that is something
+that you already know and there is no need to discuss it here.
+
+-------------------------------------------------------------
+
+Packages to Install after:
+
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|                 |                                                                                                                   |
+|     Package     |                                        Dependencies Level                                                         |
+|                 |                                                                                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|#################|          Recommended           |           Required           |                 Optional/Runtime                  |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|                 |                                |                              | GnuTLS, HTTP-Daemon (test), IO-Socket-SSL (test)  |
+|%     Wget       |       make-ca (runtime)        |                              | libidn, libpsl, PCRE, pcre2 and Valgrind (test)   |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|     make-ca     |                                |           p11-kit            | nss (to generate a shared NSSDB)                  |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|     p11-kit     | libtasn1 and make-ca (runtime) |                              | GTK-Doc, libxslt and nss (runtime)                |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|    libtasn1     |                                |                              | GTK-Doc and Valgrind                              |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|%   efibootmgr   |                                |       efivar and popt        |                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|     efivar      |                                |            mandoc            |                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|     mandoc      |                                |                              |                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|      popt       |                                |                              | Doxygen (for generating documentation)            |
+|-------------------------------------------------------------------------------------------------------------------------------------|
+|%    which       |                                |                              |                                                   |
+|-------------------------------------------------------------------------------------------------------------------------------------|

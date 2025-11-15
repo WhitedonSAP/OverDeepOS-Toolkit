@@ -1,0 +1,71 @@
+##### Create new aur package:
+
+If you are creating a new package from scratch,
+establish a local Git repository and an AUR remote by cloning the intended pkgbase.
+If the package does not yet exist, the following warning is expected:
+
+Set the package name and aur url:
+
+$ PKG_NAME="type_the name_of_package_here"
+$ AUR_GIT_URL="ssh://aur@aur.archlinux.org/$PKG_NAME.git"
+
+$ git -c init.defaultbranch=master clone $AUR_GIT_URL
+Cloning into 'pkgbase'...
+warning: You appear to have cloned an empty repository.
+Checking connectivity... done.
+
+Note: The repository will not be empty if pkgbase matches a deleted package.
+
+If you already have a package, initialize it as a Git repository if it is not one:
+
+$ cd $PKG_NAME
+$ git -c init.defaultBranch=master init
+and add an AUR remote:
+$ git remote add <label> $AUR_GIT_URL
+$ touch .gitignore
+$ nano .gitignore
+-----------------------------
+file .gitignore
+
+*
+!.SRCINFO
+!PKGBUILD
+-----------------------------
+$ git fetch <label>
+
+Note: substitute <label> for origin or main
+
+Now copy your PKGBUILD into this folder. Then below commands
+
+$ makepkg --printsrcinfo > .SRCINFO
+$ git add PKGBUILD .SRCINFO
+$ git commit -m "type_your_commit_message_here"
+$ git push
+
+I’m not sure if git push will work the first time you do it. You may need to do git push -u <label> master.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+##### Update aur package:
+
+Clone the code and enter in package directory:
+
+$ git clone $AUR_GIT_URL
+$ cd $PKG_NAME
+
+Make appropriate changes to PKGBUILD and after run:
+
+$ updpkgsums
+
+Test the PKGBUILD:
+
+$ makepkg
+$ sudo pacman -U $PKG_NAME.pkg.tar.xz
+$ pacman -R $PKG_NAME
+
+Push to aur:
+
+$ makepkg --printsrcinfo > .SRCINFO
+$ git add PKGBUILD .SRCINFO
+$ git commit -m "type_your_commit_message_here"
+$ git push

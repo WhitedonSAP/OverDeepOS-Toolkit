@@ -1,0 +1,184 @@
+#################
+# Architectures #
+#################
+        |
+        |    #--------#
+        |----| x86_64 |
+        |    #--------#
+        |        |
+        |        |    ###############
+        |        |----# System Init #
+        |             ###############
+        |                    |
+        |                    |    #--------#
+        |                    |----| OpenRC |
+        |                    |    #--------#
+        |                    |         |
+        |                    |         |    ###########
+        |                    |         |----# Library #
+        |                    |              ###########
+        |                    |                   |
+        |                    |                   |    #-------#
+        |                    |                   |----| Glibc |
+        |                    |                   |    #-------#
+        |                    |                   |        |
+        |                    |                   |        |    ############
+        |                    |                   |        |----# Compiler #
+        |                    |                   |             ############
+        |                    |                   |                  |
+        |                    |                   |                  |    #-----#
+        |                    |                   |                  |----| GCC |   
+        |                    |                   |                  |    #-----#
+        |                    |                   |                  |       |
+        |                    |                   |                  |       |
+        |                    |                   |                  |       |--->>> current-stage3-amd64-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-desktop-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-nomultilib-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-x32-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-hardened-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-hardened-nomultilib-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-hardened-selinux-openrc/
+        |                    |                   |                  |       |--->>> current-stage3-amd64-hardened-nomultilib-selinux-openrc/
+        |                    |                   |                  |
+        |                    |                   |                  |    #------#
+        |                    |                   |                  |----| LLVM |
+        |                    |                   |                       #------#
+        |                    |                   |                          |
+        |                    |                   |                          |
+        |                    |                   |                          |--->>> current-stage3-amd64-llvm-openrc/
+        |                    |                   |
+        |                    |                   |
+        |                    |                   |    #------#
+        |                    |                   |----| Musl |
+        |                    |                        #------#
+        |                    |                           |
+        |                    |                           |    ############
+        |                    |                           |----# Compiler #
+        |                    |                                ############
+        |                    |                                      |
+        |                    |                                      |    #-----#
+        |                    |                                      |----| GCC |
+        |                    |                                      |    #-----#
+        |                    |                                      |       |
+        |                    |                                      |       |
+        |                    |                                      |       |--->>> current-stage3-amd64-musl-hardened/
+        |                    |                                      |       |--->>> current-stage3-amd64-musl/
+        |                    |                                      |
+        |                    |                                      |    #------#
+        |                    |                                      |----| LLVM |
+        |                    |                                           #------#
+        |                    |                                               |
+        |                    |                                               |
+        |                    |                                               |--->>> current-stage3-amd64-musl-llvm/
+        |                    |
+        |                    |    #---------#
+        |                    |----| Systemd |
+        |                         #---------#
+        |                              |
+        |                              |    ###########
+        |                              |----# Library #
+        |                                   ###########
+        |                                        |
+        |                                        |    #-------#
+        |                                        |----| Glibc |
+        |                                             #-------#
+        |                                                 |
+        |                                                 |    ############
+        |                                                 |----# Compiler #
+        |                                                      ############
+        |                                                            |
+        |                                                            |    #-----#
+        |                                                            |----| GCC |
+        |                                                            |    #-----#
+        |                                                            |       |
+        |                                                            |       |
+        |                                                            |       |--->>> current-stage3-amd64-systemd/
+        |                                                            |       |--->>> current-stage3-amd64-systemd-mergedusr/
+        |                                                            |       |--->>> current-stage3-amd64-desktop-systemd-mergedusr/
+        |                                                            |       |--->>> current-stage3-amd64-desktop-systemd/
+        |                                                            |       |--->>> current-stage3-x32-systemd/
+        |                                                            |       |--->>> current-stage3-amd64-nomultilib-systemd-mergedusr/
+        |                                                            |       |--->>> current-stage3-amd64-nomultilib-systemd/
+        |                                                            |       |--->>> current-stage3-x32-systemd-mergedusr/
+        |                                                            |
+        |                                                            |    #------#
+        |                                                            |----| LLVM |
+        |                                                                 #------#
+        |                                                                    |
+        |                                                                    |
+        |                                                                    |--->>> current-stage3-amd64-llvm-systemd-mergedusr/
+        |                                                                    |--->>> current-stage3-amd64-llvm-systemd/
+        |
+        |    #-----#
+        |----| x86 |
+             #-----#
+                |
+                |    ###############
+                |----# System Init #
+                     ###############
+                           |
+                           |    #--------#
+                           |----| OpenRC |
+                           |    #--------#
+                           |         |
+                           |         |    ###########
+                           |         |----# Library #
+                           |              ###########
+                           |                   |
+                           |                   |    #-------#
+                           |                   |----| Glibc |
+                           |                   |    #-------#
+                           |                   |        |
+                           |                   |        |    ############
+                           |                   |        |----# Compiler #
+                           |                   |             ############
+                           |                   |                   |
+                           |                   |                   |    #-----#
+                           |                   |                   |----| GCC |
+                           |                   |                        #-----#
+                           |                   |                           |
+                           |                   |                           |
+                           |                   |                           |--->>> current-stage3-i486-openrc/
+                           |                   |                           |--->>> current-stage3-i686-openrc/
+                           |                   |                           |--->>> current-stage3-i686-hardened-openrc/
+                           |                   |
+                           |                   |    #------#
+                           |                   |----| Musl |
+                           |                        #------#
+                           |                            |
+                           |                            |    ############
+                           |                            |----# Compiler #
+                           |                                 ############
+                           |                                       |
+                           |                                       |    #-----#
+                           |                                       |----| GCC |
+                           |                                            #-----#
+                           |                                               |
+                           |                                               |
+                           |                                               |--->>> current-stage3-i686-musl/
+                           |
+                           |    #---------#
+                           |----| Systemd |
+                                #---------#
+                                     |
+                                     |    ###########
+                                     |----# Library #
+                                          ###########
+                                               |
+                                               |    #-------#
+                                               |----| Glibc |
+                                                    #-------#
+                                                        |
+                                                        |    ############
+                                                        |----# Compiler #
+                                                             ############
+                                                                  |
+                                                                  |    #-----#
+                                                                  |----| GCC #
+                                                                       #-----#
+                                                                          |
+                                                                          |
+                                                                          |--->>> current-stage3-i486-systemd/
+                                                                          |--->>> current-stage3-i486-systemd-mergedusr/
+                                                                          |--->>> current-stage3-i686-systemd/
+                                                                          |--->>> current-stage3-i686-systemd-mergedusr/

@@ -1,0 +1,307 @@
+#! /bin/bash
+#: Title       : popup
+#: Date Created: Tue Jan 18 03:04:36 PST 2011 
+#: Last Edit   : Thu Oct  6 00:23:40 PDT 2011 
+#: Author      : please_try_again 
+#: Version     : 1.2.1
+#: Description : a simple set of ncurses/QT/GTK dialog box functions
+#:             : usable in other scripts
+#: usage       : source /usr/local/bin/popup
+#:             : type pophelp for a full description
+#
+#: Copy and paste this text into a text file and save it in /usr/local/bin as the file popup.
+#: Import in other scripts or on the command line with: source /usr/local/bin/popup 
+#: 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# You might customize the functions by changing the variables below
+
+# Uncomment to enforce the use of zenity dialogs in KDE
+#ZENITY=1
+
+# set default editor. If unset $EDITOR will be used.
+# if EDITOR is not set, vi will be used :-)
+#edit=nano
+
+# uncomment one of the 3 lines below to enforce the use of text, 
+# kdialog or zenity dialogs
+#dflag=0    # dialog 
+#dflag=1      # kdialog
+#dflag=2      # zenity
+#
+# options for console dialog
+DIALOGOPTS="--colors --shadow"
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+prg=$(basename $0)
+
+function pophelp {
+cat << EOFHELP
+`tput bold`
+NAME
+`tput sgr0`    $prg - create ncurses, QT or GTK dialog boxes. 
+
+`tput bold`SYNOPSIS
+    ask `tput sgr0;tput setaf 7`"text"`tput sgr0`
+    `tput bold`entry `tput sgr0;tput setaf 7`"prompt:text"`tput sgr0`
+    `tput bold`warn  `tput sgr0;tput setaf 7`"text"`tput sgr0`
+    `tput bold`notice `tput sgr0;tput setaf 7`"text"`tput sgr0`
+    `tput bold`error `tput sgr0;tput setaf 7`"text"`tput sgr0`
+    `tput bold`fileopen `tput sgr0;tput setaf 7`<directory>`tput sgr0`
+    `tput bold`fileshow `tput sgr0;tput setaf 7`<file>`tput sgr0`
+    `tput bold`fileedit `tput sgr0;tput setaf 7`<file>`tput sgr0`
+    `tput bold`choose radio | check `tput sgr0;tput setaf 7`item1,item2,*item3 ...`tput sgr0`
+    `tput bold`pophelp `tput sgr0;` show this help.
+
+`tput bold`DESCRIPTION`tput sgr0`
+`tput bold`popup`tput sgr0` uses the programs dialog, kdialog or zenity to create ncurses, QT or GTK
+message and input boxes, according to the environment or user preferences,  so
+that Bash scripts  dialogs will have a different look & feel whether there are
+executed under KDE, Gnome, other wms or console.  You can also enforce the use
+of ncurses, QT or GTK dialogs by setting the environment variable DIALOG:
+
+    `tput bold`export DIALOG=DIALOG  `tput sgr0`(ncurses)
+    `tput bold`export DIALOG=KDIALOG `tput sgr0`(QT)
+    `tput bold`export DIALOG=ZENITY  `tput sgr0`(GTK)
+
+`tput bold`USAGE`tput sgr0`
+Either paste popup at top of your scripts or include (source) this file from
+inside your scripts - or in a bash terminal - to use its functions: 
+`tput bold`source /usr/local/bin/popup`tput sgr0`
+
+`tput bold`FUNCTIONS`tput sgr0`
+`tput bold`ask `tput sgr0;tput setaf 7`"test" `tput sgr0`return 0 (yes) or 1 (no)
+example: `tput setaf 2`ask "question?" && do something`tput sgr0`    
+`tput bold`entry `tput sgr0;tput setaf 7`"prompt:string" `tput sgr0`return the modified string:
+example: `tput setaf 2`newstring=\$(prompt:string)`tput sgr0`
+`tput bold`warning `tput sgr0;tput setaf 7`"text"        `tput sgr0`display warning message    
+`tput bold`notice `tput sgr0;tput setaf 7`"text"         `tput sgr0`display info message    
+`tput bold`error `tput sgr0;tput setaf 7`"text"          `tput sgr0`display message and abort script   
+`tput bold`fileopen `tput sgr0;tput setaf 7`<directory>  `tput sgr0`select file to open   
+Be careful in console mode! Pressing <Enter> immediately exits the dialog.
+Use space bar to select files and directories!
+`tput bold`fileshow `tput sgr0;tput setaf 7`<file>       `tput sgr0`display file   
+example: `tput setaf 2`fileshow \$(fileopen /etc)`tput sgr0`
+`tput bold`fileedit `tput sgr0;tput setaf 7`<file>       `tput sgr0`edit file   
+`tput bold`choose radio | check `tput sgr0;tput setaf 7`item1,item2,*item3 ...    
+`tput sgr0`display list of radio buttons or check options. Items should be separated by
+commas.  Spaces will be replaced by "~" in list boxes.  To preselet an item,
+preceed its name with "*" without space. 
+example: `tput setaf 2`options=\$(choose check item1 item2 *item3)`tput sgr0`
+
+`tput bold`CAVEATS
+`tput sgr0`- cursor keys in textmode (like in other ncurses programs) don't work in aterm,
+  wterm terminals . 
+- fileedit dialogs width and height are ignored in kdialog.
+- fileedit dialogs lose content in dialog, so we use the default editor instead.
+EOFHELP
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+flag=0
+which kdialog &> /dev/null && flag=$((flag | 1))
+which zenity  &> /dev/null && flag=$((flag | 2))
+[ "$KDE_SESSION_UID" ] && flag=$((flag & 1))
+[ "$KDE_SESSION_UID" ] || flag=$((flag & 2))
+[ "$ZENITY" ] && [ $ZENITY -gt 0 ] && flag=$(($flag & 2))
+[ "$DISPLAY" ] || flag=$((flag | 0))
+[ "$TPUT" ] && [ $TPUT -gt 0 ] && tflag=1
+flag=${dflag:-$flag}
+
+# default title
+title="Popup 1.0"
+
+# Default text editor 
+edit=${edit:-$EDITOR} ; edit=${edit:-vi}
+
+DIALOGS=(DIALOG KDIALOG ZENITY)
+DIALOG=${DIALOG:-${DIALOGS[$flag]}}
+
+# exit if dialog package not installed in text mode
+# generate default ~/.dialogrc
+if [ $flag -eq 0 -o "$DIALOG" == "DIALOG" ] ; then
+    which dialog &>/dev/null || exec echo "dialog not found. Install this package first."
+    [ -f ~/.dialogrc ] || dialog --create-rc ~/.dialogrc
+    W=$(tput cols) ; H=$(tput lines)
+fi  
+
+[ "$DISPLAY" ] && eval $(xdpyinfo | sed -n 's|.*dimensions:[ ]*\([0-9]*\)x\([0-9]*\) .*|XW=$((\1*50/100));XH=$((\2*50/100))|p')
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function sizebox {
+    # box width  = take 60% of terminal width or string length + 6
+     # box height = number of lines in string + 8
+    type=$1 ; shift
+    W=$(tput cols) ; H=$(tput lines)
+
+    case $type in
+        fileshow)  return ;;
+        fileopen)  W=$(($W*70/100)) ; H=$(($H*70/100)) ; return ;;
+        *)         W=$(($W*60/100)) ; H=$(($H*70/100)) ;;
+    esac
+
+    arg=$* ; msgW=${#arg}
+
+    case $type in
+        notice)  h=4 ;;
+        ask)      h=6 ;;
+        entry)   h=8 ;;
+        choose)  msgW=$(($1 + 20)) ; h=$2 ;;     
+    esac
+
+    [ $msgW -lt $W ] && W=$(($msgW + 6))
+
+    case $type in
+        choose)    [ $h -lt $H ] && H=$(($h + 3)) ; [ $W -lt 38 ] && W=38 ;;
+        *) H=$(($msgW/$W + $h )) ;;
+    esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function ask {
+YesNo=1
+case $DIALOG in
+    DIALOG)  sizebox ask "$*" ; dialog --clear --title "$title" --yesno "$*" $H $W && YesNo=0 ;;
+    KDIALOG) kdialog --title "$title" --yesno "$*" && YesNo=0 ;; 
+    ZENITY)  zenity --question --title "$title" --text "$*" && YesNo=0 ;; 
+    *) return 1 ;;
+esac
+return $YesNo
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function warn {
+case $DIALOG in
+    DIALOG)  sizebox ask "$*" ; dialog --clear --title "WARNING" --msgbox "$*" $H $W ;;
+    KDIALOG) kdialog --title "$title" --warningyesno "$*" ;;
+    ZENITY)  zenity --warning --title="$title" --text="$*" ;;
+    *) return 1 ;;
+esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function notice {
+case $DIALOG in
+    DIALOG)  sizebox notice "$*" ; dialog --title "INFO" --infobox "$*" $H $W ;;
+    KDIALOG) kdialog --title "$title" --msgbox "$*" ;;
+    ZENITY)  zenity --info --title="$title" --text="$*" ;;
+    *) return 1 ;;
+esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function error {
+case $DIALOG in
+    DIALOG)  sizebox ask "$*" ; dialog --clear --title "ERROR" --msgbox "$*" $H $W ;;
+    KDIALOG) kdialog --title "$title" --error "$*" ;;
+    ZENITY)  zenity --error --title="$title" --text="$*" ;;
+    *) return 1 ;;
+esac
+exit 1
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function entry {
+oldstring="${*##*:}" ; text="${*%%:*}:"
+case $DIALOG in
+    DIALOG)  sizebox entry $([ ${#oldstring} -gt ${#text} ] && echo $oldstring || echo $text) ; string=$(dialog --clear --stdout --title "$title" --inputbox "$text" $H $W "$oldstring") ;;
+    KDIALOG) string=$(kdialog --title "$title" --inputbox "$text" "$oldstring") ;;
+    ZENITY)  string=$(zenity --entry --title="$title" --text="$text" --entry-text="$oldstring") ;;
+    *) return 1 ;;
+esac
+echo $string
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function fileshow {
+[ -f $1 ] || error "File $1 not found"
+case $DIALOG in
+    DIALOG)  sizebox fileshow ; dialog --clear --title "$1" --textbox "$1" $H $W ;;
+    KDIALOG) kdialog --title "$title" --textbox $1 $XW $XH ;;
+    ZENITY)  zenity --text-info --title="$title" --width=$XW --height=$XH --filename=$1 ;;
+    *) return 1 ;;
+esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function fileedit {
+[ -f $1 ] || error "File $1 not found"
+cp $1{,.org}
+case $DIALOG in
+    DIALOG)  $edit "$1" ;;
+    KDIALOG) kdialog --title "$title" --textinputbox $1 "`cat $1.org`" $XW $XH > $1 ;;
+    ZENITY)  zenity --text-info --title="$title" --width=$XW --height=$XH --filename=$1.org --editable > $1 ;;
+    *) return 1 ;;
+esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function fileopen {
+[ -f $1 ] && d=$(dirname $1) ; [ -d $1 ] || d=${d:-$1} ; d=${d:-$1}
+[ -d $d ] || d=$(dirname $d) ; d=$(echo $d/ | sed 's|//|/|')
+case $DIALOG in
+    DIALOG)  sizebox fileopen ; echo $(dialog --clear --stdout --title "$title" --fselect "$1" $H $W) ;;
+    KDIALOG) echo $(kdialog --title "$title" --getopenfilename $d) ;;
+    ZENITY)  echo $(zenity --file-selection --title="$title" --width=$XW --height=$XH --filename=$d) ;;
+    *) return 1 ;;
+esac
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function choose {
+t=${1} ; shift
+[ "$t" == "radio" -o "$t" == "check" ] || error "invalid option: $t"
+
+Items=($(echo $* | sed 's| *, *|,|g;s| |~|g;s|,| |g'))
+i=0 ; j=0
+
+items=`while [ $i -lt ${#Items
+[li]} ] ; do[/li]    let j++
+    status=off
+    echo ${Items[$i]} | grep -q "*" && status=on
+    printf " %s %s %s" $j ${Items[$i]} $status 
+    let i++
+done`
+
+case $DIALOG in
+    DIALOG)
+        sizebox choose  $(echo $* | tr "," "
+" | sed 's|^ *||;s|^\*||' | wc -L) $(echo $* | sed 's|[^,]||g' | wc -L)
+        index=$(dialog --clear --stdout --title "$title" --${t}list  "Select items from the list below" $(($H+6)) $W $H $items)
+        [ "$index" == "" ] || ditems=`for i in $(echo $index | tr -d "\"") ; do let i-- ; echo ${Items[$i]} | tr "~" " " ; done` ;;    
+    KDIALOG)
+        index=$(kdialog --title "$title" --separate-output --${t}list "Select items from the list below" ${items//\*/})
+        [ "$index" == "" ] || ditems=`for i in $(echo $index | tr -d "\"") ; do let i-- ; echo ${Items[$i]} | tr "~" " " ; done` ;;    
+    ZENITY)
+        sizebox choose  $(echo $* | tr "," "
+" | sed 's|^ *||;s|^\*||' | wc -L) $(echo $* | sed 's|[^,]||g' | wc -L)
+        items=$(echo $items | sed 's|off \([0-9]\)|FALSE
+\1|g;s|on \([0-9]\)|TRUE
+\1|g;s|off$|FALSE|;s|on$|TRUE|' | awk '{ printf "%s %s ",  $3, $2 }')
+        ditems=`zenity --list --${t}list --title="$title" --width=$(($W*9)) --height=$(($H*35)) --column "" --column "" --separator " " $items` ;;
+    *) return 1 ;;
+esac
+    echo $ditems | tr " " "
+" | sed '/~/s/.*/"&"/;s/~/ /g;s/\*//g' | tr "
+" " " 
+}
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
