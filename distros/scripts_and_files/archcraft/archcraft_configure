@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sed -i 's/#single_window_aspect_ratio/single_window_aspect_ratio/' ~/.config/hypr/config.d/30-layout-dwindle.conf
