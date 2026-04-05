@@ -87,7 +87,7 @@
                            (type "vfat")) %base-file-systems))))
 
 ((nonguix-transformation-nvidia #:driver nvda-595
-                                #:open-source-kernel-module? #f
+                                #:open-source-kernel-module? #t
                                 #:kernel-mode-setting? #t
                                 #:configure-xorg? sddm-service-type
                                 #:remove-nvenc-restriction? #f)
