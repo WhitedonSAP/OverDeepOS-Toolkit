@@ -32,7 +32,7 @@
     (firmware (cons* amd-microcode
                      linux-firmware
                      nvidia-firmware
-                %base-firmware))
+              %base-firmware))
 
     ;; A lista de contas de usuário ('root' está implícito).
     (users (cons* (user-account
@@ -41,7 +41,7 @@
                     (group "users")
                     (home-directory "/home/whitedon")
                     (supplementary-groups '("wheel" "netdev" "audio" "video")))
-                  %base-user-accounts))
+           %base-user-accounts))
 
     ;; Abaixo está a lista de serviços do sistema. Para procurar por serviços
     ;; disponíveis, execute 'guix system search PALAVRA-CHAVE' em um terminal.
@@ -64,7 +64,7 @@
                                    "(public-key (ecc
                                                  (curve Ed25519)
                                                  (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))")
-                                      %default-authorized-guix-keys)))))))
+                %default-authorized-guix-keys)))))))
 
     (bootloader (bootloader-configuration
                   (bootloader grub-efi-bootloader)
@@ -76,15 +76,15 @@
     ;; executando o comando 'blkid' em um terminal.
     (file-systems (cons* (file-system
                            (mount-point "/")
-                           (device (uuid
-                                    "4fd13976-cfef-460c-82d9-4ab5c193622a"
-                                    'ext4))
+                           (device (uuid "4fd13976-cfef-460c-82d9-4ab5c193622a"
+                                         'ext4))
                            (type "ext4"))
                          (file-system
                            (mount-point "/boot/efi")
                            (device (uuid "2F3C-1AF9"
                                          'fat32))
-                           (type "vfat")) %base-file-systems))))
+                           (type "vfat"))
+                  %base-file-systems))))
 
 ((nonguix-transformation-nvidia #:driver nvda-595
                                 #:open-source-kernel-module? #t
