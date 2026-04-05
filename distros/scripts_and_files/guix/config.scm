@@ -6,24 +6,33 @@
 ;; do sistema, e usar o comando 'guix system reconfigure'
 ;; para aplicar suas mudanças.
 
-
 ;; Indica quais módulos importar para acessar as variáveis
 ;; usadas nessa configuração.
+
 (use-modules (gnu)
+             (gnu services sddm)
+             (gnu services xorg)
+             (guix channels)
+             (guix gexp)
              (nongnu packages linux)
+             (nongnu packages nvidia)
              (nongnu system linux-initrd)
              (nonguix transformations))
-(use-service-modules cups desktop networking ssh xorg)
+
+(use-service-modules desktop networking sddm ssh xorg)
 
 (define %my-os
   (operating-system
+    (host-name "gnuguix")
+    (locale "pt_BR.utf8")
+    (keyboard-layout (keyboard-layout "br"))
+    (timezone "America/Sao_Paulo")
     (kernel linux)
     (initrd microcode-initrd)
-    (firmware (list linux-firmware))
-    (locale "pt_BR.utf8")
-    (timezone "America/Sao_Paulo")
-    (keyboard-layout (keyboard-layout "br"))
-    (host-name "gnuguix")
+    (firmware (cons* amd-microcode
+                     linux-firmware
+                     nvidia-firmware
+                %base-firmware))
 
     ;; A lista de contas de usuário ('root' está implícito).
     (users (cons* (user-account
@@ -37,13 +46,26 @@
     ;; Abaixo está a lista de serviços do sistema. Para procurar por serviços
     ;; disponíveis, execute 'guix system search PALAVRA-CHAVE' em um terminal.
     (services
-     (append (list (service gnome-desktop-service-type)
-                   (set-xorg-configuration
-                    (xorg-configuration (keyboard-layout keyboard-layout))))
+     (cons* (service sddm-service-type
+             (sddm-configuration
+               (display-server "x11")
+               (theme "breeze")))
+            (service plasma-desktop-service-type)
+            (service bluetooth-service-type)
+            (modify-services %desktop-services
+              (delete gdm-service-type)
+              (guix-service-type config => (guix-configuration
+               (inherit config)
+               (substitute-urls
+                (cons* "https://substitutes.nonguix.org"
+                   %default-substitute-urls))
+               (authorized-keys
+                (cons* (plain-file "non-guix.pub"
+                                   "(public-key (ecc
+                                                 (curve Ed25519)
+                                                 (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))")
+                                      %default-authorized-guix-keys)))))))
 
-             ;; Essa é a lista padrão de serviços na
-             ;; qual estamos adicionando.
-             %desktop-services))
     (bootloader (bootloader-configuration
                   (bootloader grub-efi-bootloader)
                   (targets (list "/boot/efi"))
@@ -63,5 +85,10 @@
                            (device (uuid "2F3C-1AF9"
                                          'fat32))
                            (type "vfat")) %base-file-systems))))
-((compose (nonguix-transformation-nvidia))
-  %my-os)
+
+((nonguix-transformation-nvidia #:driver nvda-595
+                                #:open-source-kernel-module? #f
+                                #:kernel-mode-setting? #t
+                                #:configure-xorg? sddm-service-type
+                                #:remove-nvenc-restriction? #f)
+ %my-os)
