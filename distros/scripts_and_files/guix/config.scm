@@ -46,8 +46,10 @@
     (services
      (cons* (service sddm-service-type
              (sddm-configuration
-               (display-server "x11")
-               (theme "elarun")))
+               (display-server "wayland")
+               (theme "elarun"))
+             (xorg-configuration)
+               (keyboard-layout keyboard-layout))
             (service plasma-desktop-service-type)
             (service bluetooth-service-type)
             (modify-services %desktop-services
