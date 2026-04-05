@@ -8,7 +8,6 @@
 
 ;; Indica quais módulos importar para acessar as variáveis
 ;; usadas nessa configuração.
-
 (use-modules (gnu)
              (gnu services sddm)
              (gnu services xorg)
@@ -18,7 +17,6 @@
              (nongnu packages nvidia)
              (nongnu system linux-initrd)
              (nonguix transformations))
-
 (use-service-modules desktop networking sddm ssh xorg)
 
 (define %my-os
