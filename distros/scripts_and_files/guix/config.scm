@@ -47,7 +47,7 @@
      (cons* (service sddm-service-type
              (sddm-configuration
                (display-server "x11")
-               (theme "breeze")))
+               (theme "elarun")))
             (service plasma-desktop-service-type)
             (service bluetooth-service-type)
             (modify-services %desktop-services
