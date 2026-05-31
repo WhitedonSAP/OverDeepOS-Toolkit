@@ -63,6 +63,9 @@ then
 fi
 echo
 
+## Fix .service enabled
+systemctl disable casper-md5check.service
+
 ## Update grub config file
 sudo update-grub
 
